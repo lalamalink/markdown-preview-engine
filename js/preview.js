@@ -74,6 +74,7 @@
 
     preview.innerHTML = md.render(markdown || "");
     engine.wrapScrollableTables(preview);
+    engine.wrapScrollableCodeBlocks(preview);
     engine.enhanceTaskListItems(preview);
   }
 

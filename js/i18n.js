@@ -26,6 +26,8 @@
       updated: "更新済み",
       markdownItMissing: "markdown-it.min.js が読み込めませんでした",
       emojiMissing: "markdown-it-emoji が読み込めませんでした",
+      horizontalScrollHint: "横にスクロールできます →",
+      resetHorizontalScroll: "横スクロール位置を左端に戻す",
       editorPlaceholder: "ここにMarkdownを入力または貼り付けてください。"
     },
     en: {
@@ -50,6 +52,8 @@
       updated: "Updated",
       markdownItMissing: "Could not load markdown-it.min.js",
       emojiMissing: "Could not load markdown-it-emoji",
+      horizontalScrollHint: "Scroll horizontally →",
+      resetHorizontalScroll: "Reset horizontal scroll to the left edge",
       editorPlaceholder: "Type or paste Markdown here."
     }
   };
@@ -96,7 +100,33 @@
     });
   };
 
+  function createScrollHint(t) {
+    const hint = document.createElement("button");
+    hint.type = "button";
+    hint.className = "scroll-hint";
+    hint.textContent = t.horizontalScrollHint;
+    hint.setAttribute("aria-label", t.resetHorizontalScroll);
+    return hint;
+  }
+
+  function scrollToLeft(scrollElement) {
+    try {
+      scrollElement.scrollTo({ left: 0, behavior: "smooth" });
+    } catch (error) {
+      scrollElement.scrollLeft = 0;
+    }
+  }
+
+  function updateScrollCue(wrap, scrollElement) {
+    const canScrollRight = scrollElement.scrollLeft + scrollElement.clientWidth < scrollElement.scrollWidth - 1;
+    wrap.classList.toggle("is-scrollable", scrollElement.scrollWidth > scrollElement.clientWidth + 1);
+    wrap.classList.toggle("is-scrolled", scrollElement.scrollLeft > 4);
+    wrap.classList.toggle("is-at-end", !canScrollRight);
+  }
+
   window.MarkdownPreviewEngine.wrapScrollableTables = function wrapScrollableTables(root) {
+    const t = window.MarkdownPreviewEngine.getText();
+
     root.querySelectorAll("table").forEach((table) => {
       if (table.closest(".table-scroll-wrap")) return;
 
@@ -105,28 +135,57 @@
 
       const wrap = document.createElement("div");
       const scroll = document.createElement("div");
-      const hint = document.createElement("p");
+      const hint = createScrollHint(t);
 
       wrap.className = "table-scroll-wrap";
       scroll.className = "table-scroll";
-      hint.className = "table-scroll-hint";
-      hint.textContent = "横にスクロールできます";
+      hint.classList.add("table-scroll-hint");
 
       parent.insertBefore(wrap, table);
       wrap.appendChild(scroll);
       scroll.appendChild(table);
       wrap.appendChild(hint);
 
-      function updateScrollCue() {
-        const canScrollRight = scroll.scrollLeft + scroll.clientWidth < scroll.scrollWidth - 1;
-        wrap.classList.toggle("is-scrollable", scroll.scrollWidth > scroll.clientWidth + 1);
-        wrap.classList.toggle("is-scrolled", scroll.scrollLeft > 4);
-        wrap.classList.toggle("is-at-end", !canScrollRight);
-      }
+      scroll.addEventListener("scroll", () => updateScrollCue(wrap, scroll), { passive: true });
+      hint.addEventListener("click", () => {
+        scrollToLeft(scroll);
+        window.setTimeout(() => updateScrollCue(wrap, scroll), 180);
+        hint.blur();
+      });
+      window.addEventListener("resize", () => updateScrollCue(wrap, scroll));
+      updateScrollCue(wrap, scroll);
+    });
+  };
 
-      scroll.addEventListener("scroll", updateScrollCue, { passive: true });
-      window.addEventListener("resize", updateScrollCue);
-      updateScrollCue();
+  window.MarkdownPreviewEngine.wrapScrollableCodeBlocks = function wrapScrollableCodeBlocks(root) {
+    const t = window.MarkdownPreviewEngine.getText();
+
+    root.querySelectorAll("pre").forEach((pre) => {
+      if (pre.closest(".code-scroll-wrap")) return;
+      if (pre.scrollWidth <= pre.clientWidth + 1) return;
+
+      const parent = pre.parentElement;
+      if (!parent) return;
+
+      const wrap = document.createElement("div");
+      const hint = createScrollHint(t);
+
+      wrap.className = "code-scroll-wrap";
+      pre.classList.add("code-scroll");
+      hint.classList.add("code-scroll-hint");
+
+      parent.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      wrap.appendChild(hint);
+
+      pre.addEventListener("scroll", () => updateScrollCue(wrap, pre), { passive: true });
+      hint.addEventListener("click", () => {
+        scrollToLeft(pre);
+        window.setTimeout(() => updateScrollCue(wrap, pre), 180);
+        hint.blur();
+      });
+      window.addEventListener("resize", () => updateScrollCue(wrap, pre));
+      updateScrollCue(wrap, pre);
     });
   };
 })();

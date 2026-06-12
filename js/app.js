@@ -94,6 +94,7 @@
 
     elements.preview.innerHTML = md.render(markdown || "");
     engine.wrapScrollableTables(elements.preview);
+    engine.wrapScrollableCodeBlocks(elements.preview);
     engine.enhanceTaskListItems(elements.preview);
     elements.previewStatus.textContent = window.markdownitEmoji ? t.updated : t.emojiMissing;
   }
