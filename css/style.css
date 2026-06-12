@@ -65,6 +65,11 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
+body.reader-page {
+  min-height: 100svh;
+  background: var(--surface);
+}
+
 button,
 select,
 textarea {
@@ -232,6 +237,13 @@ textarea:focus {
   font-size: var(--preview-font-size);
 }
 
+.reader-body {
+  width: min(100%, 760px);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+}
+
 .markdown-body > :first-child {
   margin-top: 0;
 }
@@ -267,6 +279,7 @@ textarea:focus {
 .markdown-body blockquote,
 .markdown-body td,
 .markdown-body th {
+  max-width: 100%;
   overflow-wrap: anywhere;
   word-break: normal;
 }
@@ -306,6 +319,7 @@ textarea:focus {
   margin: 1rem 0;
   padding: 1rem;
   overflow-x: auto;
+  overflow-y: hidden;
   border-radius: 8px;
   background: var(--code-bg);
   -webkit-overflow-scrolling: touch;
@@ -335,6 +349,7 @@ textarea:focus {
   max-width: 100%;
   margin: 1rem 0;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -405,6 +420,12 @@ textarea:focus {
 
   .markdown-body {
     min-height: 55vh;
+  }
+
+  .reader-body {
+    width: 100%;
+    min-height: 100svh;
+    padding: max(16px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
   }
 }
 

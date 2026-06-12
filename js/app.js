@@ -1,60 +1,9 @@
 (function () {
   "use strict";
 
-  const i18n = {
-    ja: {
-      openFile: ".mdファイルを開く",
-      loadSample: "サンプルを読み込む",
-      updatePreview: "プレビュー更新",
-      preview: "プレビュー",
-      editor: "Markdown入力",
-      theme: "テーマ",
-      themeSystem: "システム",
-      themeLight: "ライト",
-      themeDark: "ダーク",
-      fontSize: "文字サイズ",
-      fontSmall: "小",
-      fontNormal: "標準",
-      fontLarge: "大",
-      fontXLarge: "特大",
-      noFile: "ファイル未選択",
-      loadedSample: "サンプルを読み込みました",
-      loadedFile: "読み込み完了",
-      updated: "更新済み",
-      markdownItMissing: "markdown-it.min.js が読み込めませんでした",
-      editorPlaceholder: "ここにMarkdownを入力または貼り付けてください。"
-    },
-    en: {
-      openFile: "Open .md file",
-      loadSample: "Load sample",
-      updatePreview: "Update preview",
-      preview: "Preview",
-      editor: "Markdown input",
-      theme: "Theme",
-      themeSystem: "System",
-      themeLight: "Light",
-      themeDark: "Dark",
-      fontSize: "Text size",
-      fontSmall: "Small",
-      fontNormal: "Normal",
-      fontLarge: "Large",
-      fontXLarge: "Extra large",
-      noFile: "No file selected",
-      loadedSample: "Sample loaded",
-      loadedFile: "Loaded",
-      updated: "Updated",
-      markdownItMissing: "Could not load markdown-it.min.js",
-      editorPlaceholder: "Type or paste Markdown here."
-    }
-  };
-
-  const lang = "ja";
-  const t = i18n[lang];
-  const storageKeys = {
-    theme: "markdown-preview-engine:theme",
-    fontSize: "markdown-preview-engine:font-size",
-    content: "markdown-preview-engine:content"
-  };
+  const engine = window.MarkdownPreviewEngine;
+  const t = engine.getText();
+  const storageKeys = engine.storageKeys;
 
   const elements = {
     input: document.getElementById("markdownInput"),
@@ -63,29 +12,36 @@
     fileName: document.getElementById("fileName"),
     loadSampleButton: document.getElementById("loadSampleButton"),
     updatePreviewButton: document.getElementById("updatePreviewButton"),
+    openPreviewButton: document.getElementById("openPreviewButton"),
     themeSelect: document.getElementById("themeSelect"),
     fontSizeSelect: document.getElementById("fontSizeSelect"),
     editorStatus: document.getElementById("editorStatus"),
     previewStatus: document.getElementById("previewStatus")
   };
 
-  const md = window.markdownit
-    ? window.markdownit({
-        html: false,
-        linkify: true,
-        typographer: true,
-        breaks: false
-      })
-    : null;
+  const md = createMarkdownRenderer();
 
-  if (md) {
+  function createMarkdownRenderer() {
+    if (!window.markdownit) return null;
+
+    const renderer = window.markdownit({
+      html: false,
+      linkify: true,
+      typographer: true,
+      breaks: false
+    });
+
+    if (window.markdownitEmoji) {
+      renderer.use(window.markdownitEmoji);
+    }
+
     const defaultRender =
-      md.renderer.rules.link_open ||
+      renderer.renderer.rules.link_open ||
       function (tokens, idx, options, env, self) {
         return self.renderToken(tokens, idx, options);
       };
 
-    md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+    renderer.renderer.rules.link_open = function (tokens, idx, options, env, self) {
       const targetIndex = tokens[idx].attrIndex("target");
       const relIndex = tokens[idx].attrIndex("rel");
 
@@ -103,18 +59,8 @@
 
       return defaultRender(tokens, idx, options, env, self);
     };
-  }
 
-  function applyI18n() {
-    document.querySelectorAll("[data-i18n]").forEach((node) => {
-      const key = node.getAttribute("data-i18n");
-      if (t[key]) node.textContent = t[key];
-    });
-
-    document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => {
-      const key = node.getAttribute("data-i18n-placeholder");
-      if (t[key]) node.setAttribute("placeholder", t[key]);
-    });
+    return renderer;
   }
 
   function resolveTheme(theme) {
@@ -177,12 +123,16 @@
     elements.preview.innerHTML = md.render(markdown || "");
     wrapTables();
     enhanceTaskListItems();
-    elements.previewStatus.textContent = t.updated;
+    elements.previewStatus.textContent = window.markdownitEmoji ? t.updated : t.emojiMissing;
+  }
+
+  function saveCurrentContent() {
+    localStorage.setItem(storageKeys.content, elements.input.value);
   }
 
   function updateContent(markdown, statusText) {
     elements.input.value = markdown;
-    localStorage.setItem(storageKeys.content, markdown);
+    saveCurrentContent();
     renderMarkdown(markdown);
     elements.editorStatus.textContent = statusText || "";
   }
@@ -215,8 +165,13 @@
     reader.readAsText(file, "utf-8");
   }
 
+  function openPreviewPage() {
+    saveCurrentContent();
+    window.location.href = "preview.html";
+  }
+
   function init() {
-    applyI18n();
+    engine.applyI18n();
 
     const savedTheme = localStorage.getItem(storageKeys.theme) || "system";
     const savedFontSize = localStorage.getItem(storageKeys.fontSize) || "normal";
@@ -227,19 +182,19 @@
 
     const initialContent =
       savedContent ||
-      "# Markdown Preview Engine\n\nMarkdownを入力すると、ここにプレビューが表示されます。\n\n- `.md` ファイルを読み込めます\n- 表とコードブロックはその部分だけ横スクロールします\n- テーマと文字サイズは保存されます\n";
+      "# Markdown Preview Engine\n\nMarkdownを入力すると、ここにプレビューが表示されます。\n\n- `.md` ファイルを読み込めます\n- `:smile:` `:rocket:` `:tada:` は 😄 🚀 🎉 と表示されます\n- 表とコードブロックはその部分だけ横スクロールします\n- テーマと文字サイズは保存されます\n";
 
     updateContent(initialContent, "");
 
     const debouncedRender = debounce(() => {
-      const markdown = elements.input.value;
-      localStorage.setItem(storageKeys.content, markdown);
-      renderMarkdown(markdown);
+      saveCurrentContent();
+      renderMarkdown(elements.input.value);
       elements.editorStatus.textContent = "";
     }, 180);
 
     elements.input.addEventListener("input", debouncedRender);
     elements.updatePreviewButton.addEventListener("click", () => renderMarkdown(elements.input.value));
+    elements.openPreviewButton.addEventListener("click", openPreviewPage);
     elements.loadSampleButton.addEventListener("click", () => {
       loadSample().catch((error) => {
         elements.editorStatus.textContent = error.message;
