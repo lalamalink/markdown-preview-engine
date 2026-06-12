@@ -80,4 +80,53 @@
       if (t[key]) node.setAttribute("placeholder", t[key]);
     });
   };
+
+  window.MarkdownPreviewEngine.enhanceTaskListItems = function enhanceTaskListItems(root) {
+    root.querySelectorAll("li").forEach((item) => {
+      const match = item.innerHTML.match(/^\s*\[( |x|X)\]\s+/);
+      if (!match) return;
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.disabled = true;
+      checkbox.checked = match[1].toLowerCase() === "x";
+
+      item.innerHTML = item.innerHTML.replace(/^\s*\[( |x|X)\]\s+/, "");
+      item.prepend(checkbox);
+    });
+  };
+
+  window.MarkdownPreviewEngine.wrapScrollableTables = function wrapScrollableTables(root) {
+    root.querySelectorAll("table").forEach((table) => {
+      if (table.closest(".table-scroll-wrap")) return;
+
+      const parent = table.parentElement;
+      if (!parent || table.scrollWidth <= parent.clientWidth + 1) return;
+
+      const wrap = document.createElement("div");
+      const scroll = document.createElement("div");
+      const hint = document.createElement("p");
+
+      wrap.className = "table-scroll-wrap";
+      scroll.className = "table-scroll";
+      hint.className = "table-scroll-hint";
+      hint.textContent = "横にスクロールできます";
+
+      parent.insertBefore(wrap, table);
+      wrap.appendChild(scroll);
+      scroll.appendChild(table);
+      wrap.appendChild(hint);
+
+      function updateScrollCue() {
+        const canScrollRight = scroll.scrollLeft + scroll.clientWidth < scroll.scrollWidth - 1;
+        wrap.classList.toggle("is-scrollable", scroll.scrollWidth > scroll.clientWidth + 1);
+        wrap.classList.toggle("is-scrolled", scroll.scrollLeft > 4);
+        wrap.classList.toggle("is-at-end", !canScrollRight);
+      }
+
+      scroll.addEventListener("scroll", updateScrollCue, { passive: true });
+      window.addEventListener("resize", updateScrollCue);
+      updateScrollCue();
+    });
+  };
 })();

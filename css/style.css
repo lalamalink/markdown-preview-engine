@@ -9,6 +9,8 @@
   --accent-strong: #115e59;
   --code-bg: #eef2f6;
   --code-text: #243447;
+  --table-fade: linear-gradient(to left, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0));
+  --table-hint-bg: rgba(240, 243, 245, 0.82);
   --shadow: 0 10px 28px rgba(31, 37, 43, 0.08);
   --preview-font-size: 16px;
   --editor-font-size: 15px;
@@ -25,6 +27,8 @@
   --accent-strong: #99f6e4;
   --code-bg: #111418;
   --code-text: #eef2f6;
+  --table-fade: linear-gradient(to left, rgba(32, 37, 42, 0.96), rgba(32, 37, 42, 0));
+  --table-hint-bg: rgba(42, 48, 54, 0.82);
   --shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
 }
 
@@ -344,13 +348,52 @@ textarea:focus {
   background: var(--border);
 }
 
-.table-wrapper {
+.table-scroll-wrap {
+  position: relative;
   width: 100%;
   max-width: 100%;
   margin: 1rem 0;
+}
+
+.table-scroll-wrap::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 2rem;
+  width: 2.75rem;
+  pointer-events: none;
+  content: "";
+  background: var(--table-fade);
+  opacity: 1;
+  transition: opacity 160ms ease;
+}
+
+.table-scroll-wrap.is-at-end::after {
+  opacity: 0;
+}
+
+.table-scroll {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-hint {
+  display: inline-block;
+  margin: 0.35rem 0 0;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: var(--table-hint-bg);
+  color: var(--muted);
+  font-size: 0.78em;
+  line-height: 1.5;
+  transition: opacity 160ms ease;
+}
+
+.table-scroll-wrap.is-scrolled .table-scroll-hint {
+  opacity: 0.32;
 }
 
 .markdown-body table {

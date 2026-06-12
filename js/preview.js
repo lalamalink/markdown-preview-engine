@@ -64,34 +64,6 @@
     document.documentElement.dataset.fontSize = savedFontSize;
   }
 
-  function wrapTables() {
-    preview.querySelectorAll("table").forEach((table) => {
-      if (table.parentElement && table.parentElement.classList.contains("table-wrapper")) {
-        return;
-      }
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "table-wrapper";
-      table.parentNode.insertBefore(wrapper, table);
-      wrapper.appendChild(table);
-    });
-  }
-
-  function enhanceTaskListItems() {
-    preview.querySelectorAll("li").forEach((item) => {
-      const match = item.innerHTML.match(/^\s*\[( |x|X)\]\s+/);
-      if (!match) return;
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.disabled = true;
-      checkbox.checked = match[1].toLowerCase() === "x";
-
-      item.innerHTML = item.innerHTML.replace(/^\s*\[( |x|X)\]\s+/, "");
-      item.prepend(checkbox);
-    });
-  }
-
   function renderMarkdown(markdown) {
     if (!md) {
       const message = document.createElement("p");
@@ -101,8 +73,8 @@
     }
 
     preview.innerHTML = md.render(markdown || "");
-    wrapTables();
-    enhanceTaskListItems();
+    engine.wrapScrollableTables(preview);
+    engine.enhanceTaskListItems(preview);
   }
 
   function init() {

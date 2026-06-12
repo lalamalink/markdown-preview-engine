@@ -40,7 +40,8 @@ markdown-preview-engine/
 - 長いURLの折り返し
 - 画像の画面幅内縮小
 - コードブロックだけ横スクロール
-- Markdownから生成された表を `.table-wrapper` で包み、表だけ横スクロール
+- 本文幅を超える表だけを `.table-scroll-wrap > .table-scroll` で包み、表だけ横スクロール
+- 横スクロール可能な表に右端グラデーションと案内文を表示
 
 ## ローカルでの起動方法
 

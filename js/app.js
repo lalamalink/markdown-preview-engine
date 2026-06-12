@@ -82,34 +82,6 @@
     localStorage.setItem(storageKeys.fontSize, size);
   }
 
-  function wrapTables() {
-    elements.preview.querySelectorAll("table").forEach((table) => {
-      if (table.parentElement && table.parentElement.classList.contains("table-wrapper")) {
-        return;
-      }
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "table-wrapper";
-      table.parentNode.insertBefore(wrapper, table);
-      wrapper.appendChild(table);
-    });
-  }
-
-  function enhanceTaskListItems() {
-    elements.preview.querySelectorAll("li").forEach((item) => {
-      const match = item.innerHTML.match(/^\s*\[( |x|X)\]\s+/);
-      if (!match) return;
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.disabled = true;
-      checkbox.checked = match[1].toLowerCase() === "x";
-
-      item.innerHTML = item.innerHTML.replace(/^\s*\[( |x|X)\]\s+/, "");
-      item.prepend(checkbox);
-    });
-  }
-
   function renderMarkdown(markdown) {
     if (!md) {
       elements.preview.innerHTML = "";
@@ -121,8 +93,8 @@
     }
 
     elements.preview.innerHTML = md.render(markdown || "");
-    wrapTables();
-    enhanceTaskListItems();
+    engine.wrapScrollableTables(elements.preview);
+    engine.enhanceTaskListItems(elements.preview);
     elements.previewStatus.textContent = window.markdownitEmoji ? t.updated : t.emojiMissing;
   }
 
